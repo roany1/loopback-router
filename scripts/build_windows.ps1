@@ -8,11 +8,11 @@ $PSNativeCommandUseErrorActionPreference = $true
 Set-Location (Join-Path $PSScriptRoot "..")
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -U pip maturin pyinstaller pytest
+python -m pip install -U pip maturin pyinstaller pytest
 cargo test --no-default-features
 maturin build --release --out dist\wheels
-pip install --force-reinstall (Get-ChildItem dist\wheels\*.whl).FullName
-pytest -q tests
+python -m pip install --force-reinstall (Get-ChildItem dist\wheels\*.whl).FullName
+python -m pytest -q tests
 Push-Location packaging
 pyinstaller --noconfirm --distpath ..\dist --workpath ..\build loopback.spec
 Pop-Location
