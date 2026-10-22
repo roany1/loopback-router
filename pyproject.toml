@@ -1,0 +1,29 @@
+[build-system]
+requires = ["maturin>=1.8,<2"]
+build-backend = "maturin"
+
+[project]
+name = "loopback-router"
+version = "0.1.0"
+description = "Router audio tra applicazioni per macOS e Windows (motore Rust, interfaccia Python)"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Roany Romano" }]
+classifiers = [
+  "Programming Language :: Rust",
+  "Programming Language :: Python :: 3",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+]
+
+[project.scripts]
+loopback = "loopback.__main__:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pyinstaller>=6"]
+
+[tool.maturin]
+python-source = "python"
+module-name = "loopback._engine"
+features = ["python"]
