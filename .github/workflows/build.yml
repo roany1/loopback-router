@@ -67,14 +67,40 @@ jobs:
           name: loopback-router-${{ matrix.os }}
           path: ${{ matrix.artifact }}
 
+  # Releases: pushing a tag vX.Y.Z publishes it; a push to main whose Cargo.toml
+  # version has no matching tag yet creates tag + release automatically.
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
     needs: build-app
     runs-on: ubuntu-latest
     permissions: { contents: write }
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - name: Decide tag
+        id: tag
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"; echo "go=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          VER=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
+          echo "name=v$VER" >> "$GITHUB_OUTPUT"
+          if gh release view "v$VER" >/dev/null 2>&1 || git ls-remote --exit-code --tags origin "v$VER" >/dev/null; then
+            echo "v$VER already released, skipping"; echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.tag.outputs.go == 'true'
+        uses: actions/download-artifact@v4
         with: { path: artifacts }
-      - uses: softprops/action-gh-release@v2
+      - if: steps.tag.outputs.go == 'true'
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          name: Loopback Router ${{ steps.tag.outputs.name }}
+          body: |
+            Build automatiche per macOS (Apple Silicon) e Windows x64.
+            Eseguibili non firmati: al primo avvio macOS/SmartScreen chiederanno conferma.
+            Non ancora testato su hardware Mac/Windows reale. Per l'instradamento tra app servono BlackHole (macOS) o VB-CABLE (Windows).
           files: artifacts/**/*.zip
