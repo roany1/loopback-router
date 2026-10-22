@@ -3,6 +3,8 @@
 # Build "Loopback Router.exe" on Windows. Requires: Python 3.9+ from python.org
 # (with Tcl/Tk), Rust via rustup with the MSVC toolchain (Visual Studio Build Tools).
 $ErrorActionPreference = "Stop"
+# PowerShell 7.3+: also stop when a native command (cargo, pip, pytest...) fails
+$PSNativeCommandUseErrorActionPreference = $true
 Set-Location (Join-Path $PSScriptRoot "..")
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
